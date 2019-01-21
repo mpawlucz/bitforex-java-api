@@ -1,6 +1,9 @@
 package com.github.mpawlucz.bitforex;
 
+import com.github.mpawlucz.bitforex.domain.request.TradeRequest;
 import com.github.mpawlucz.bitforex.domain.response.BalanceResponse;
+import com.github.mpawlucz.bitforex.domain.response.OpenOrdersResponse;
+import com.github.mpawlucz.bitforex.domain.response.TradeResponse;
 import com.github.mpawlucz.bitforex.rest.RestClient;
 import com.github.mpawlucz.bitforex.sign.ApiKey;
 import com.github.mpawlucz.bitforex.sign.Hmac;
@@ -11,6 +14,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -24,27 +28,15 @@ import java.util.stream.Collectors;
 
 public class BitforexRestApi {
 
-    final static DecimalFormat volumeFormat;
-    final static DecimalFormat priceFormat;
     public static final String BASE_URL = "https://api.bitforex.com";
 
+    final static DecimalFormat decimalFormat;
     static {
         final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
-        volumeFormat = new DecimalFormat("#0.########", symbols);
-        volumeFormat.setMinimumFractionDigits(8);
-        volumeFormat.setMaximumFractionDigits(8);
-        volumeFormat.setDecimalSeparatorAlwaysShown(true);
-        volumeFormat.setGroupingUsed(false);
-    }
-    static {
-        final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-        symbols.setDecimalSeparator('.');
-        priceFormat = new DecimalFormat("#0.##########", symbols);
-        priceFormat.setMinimumFractionDigits(10);
-        priceFormat.setMaximumFractionDigits(10);
-        priceFormat.setDecimalSeparatorAlwaysShown(true);
-        priceFormat.setGroupingUsed(false);
+        decimalFormat = new DecimalFormat("#0.########", symbols);
+        decimalFormat.setDecimalSeparatorAlwaysShown(true);
+        decimalFormat.setGroupingUsed(false);
     }
 
     private final Gson gson = new Gson();
@@ -67,6 +59,46 @@ public class BitforexRestApi {
         Type typeToken = new TypeToken<BalanceResponse>() {}.getType();
         final BalanceResponse response = gson.fromJson(responseText, typeToken);
         return response;
+    }
+
+    public TradeResponse trade(TradeRequest trade) throws IOException {
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("tradeType", trade.getIsBuy() ? "1" : "2");
+        params.put("price", formatSatoshi(trade.getPrice()));
+        params.put("amount", formatSatoshi(trade.getVolume()));
+        params.put("symbol", baseQuoteToSymbol(trade.getBase(), trade.getQuote()));
+
+        final String responseText = authorizedPost(
+                BASE_URL,
+                "/api/v1/trade/placeOrder",
+                params
+        );
+
+        System.out.println(responseText);
+
+        Type typeToken = new TypeToken<TradeResponse>() {}.getType();
+        final TradeResponse response = gson.fromJson(responseText, typeToken);
+        return response;
+    }
+
+    public OpenOrdersResponse getOpenOrders(String base, String quote) throws IOException {
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("symbol", baseQuoteToSymbol(base, quote));
+        params.put("state", "0");
+
+        final String responseText = authorizedPost(
+                BASE_URL,
+                "/api/v1/trade/orderInfos",
+                params
+        );
+
+        Type typeToken = new TypeToken<OpenOrdersResponse>() {}.getType();
+        final OpenOrdersResponse response = gson.fromJson(responseText, typeToken);
+        return response;
+    }
+
+    private String baseQuoteToSymbol(String base, String quote) {
+        return "coin-" + quote.toLowerCase() + "-" + base.toLowerCase();
     }
 
     private String authorizedPost(String baseUrl, String path, HashMap<String, String> additionalParams) throws IOException {
@@ -108,6 +140,14 @@ public class BitforexRestApi {
         params.put("accessKey", apiKey.getKey());
         params.put("nonce", ""+(System.currentTimeMillis()));
         return params;
+    }
+
+    protected static String formatSatoshi(BigDecimal bigDecimal){
+        if (bigDecimal == null){
+            return null;
+        } else {
+            return decimalFormat.format(bigDecimal);
+        }
     }
 
 }

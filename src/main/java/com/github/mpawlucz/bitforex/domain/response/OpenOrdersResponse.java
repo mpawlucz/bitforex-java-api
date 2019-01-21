@@ -1,6 +1,6 @@
 package com.github.mpawlucz.bitforex.domain.response;
 
-import com.github.mpawlucz.bitforex.domain.response.items.BalanceEntry;
+import com.github.mpawlucz.bitforex.domain.response.items.OpenOrderEntry;
 import com.google.gson.annotations.SerializedName;
 import lombok.*;
 
@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class BalanceResponse {
+public class OpenOrdersResponse {
 
     @SerializedName("success")
     private Boolean success;
@@ -23,6 +23,6 @@ public class BalanceResponse {
     private String message;
 
     @SerializedName("data")
-    private List<BalanceEntry> data;
+    private List<OpenOrderEntry> data;
 
 }

@@ -1,17 +1,15 @@
 package com.github.mpawlucz.bitforex.domain.response;
 
-import com.github.mpawlucz.bitforex.domain.response.items.BalanceEntry;
+import com.github.mpawlucz.bitforex.domain.response.items.TradeResponseData;
 import com.google.gson.annotations.SerializedName;
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
-public class BalanceResponse {
+public class TradeResponse{
 
     @SerializedName("success")
     private Boolean success;
@@ -23,6 +21,6 @@ public class BalanceResponse {
     private String message;
 
     @SerializedName("data")
-    private List<BalanceEntry> data;
+    private TradeResponseData data;
 
 }
