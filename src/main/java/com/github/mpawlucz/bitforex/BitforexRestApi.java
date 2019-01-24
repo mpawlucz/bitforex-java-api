@@ -1,7 +1,9 @@
 package com.github.mpawlucz.bitforex;
 
+import com.github.mpawlucz.bitforex.domain.request.CancelOrderRequest;
 import com.github.mpawlucz.bitforex.domain.request.TradeRequest;
 import com.github.mpawlucz.bitforex.domain.response.BalanceResponse;
+import com.github.mpawlucz.bitforex.domain.response.CancelOrderResponse;
 import com.github.mpawlucz.bitforex.domain.response.OpenOrdersResponse;
 import com.github.mpawlucz.bitforex.domain.response.TradeResponse;
 import com.github.mpawlucz.bitforex.rest.RestClient;
@@ -31,6 +33,17 @@ public class BitforexRestApi {
     public static final String BASE_URL = "https://api.bitforex.com";
 
     final static DecimalFormat decimalFormat;
+    public static final String STATE_OPEN_ORDERS = "0";
+
+    public static final Type CANCEL_ORDER_RESPONSE_TYPE = new TypeToken<CancelOrderResponse>() {
+    }.getType();
+    public static final Type OPEN_ORDERS_RESPONSE_TYPE = new TypeToken<OpenOrdersResponse>() {
+    }.getType();
+    public static final Type TRADE_RESPONSE_TYPE = new TypeToken<TradeResponse>() {
+    }.getType();
+    public static final Type BALANCE_RESPONSE_TYPE = new TypeToken<BalanceResponse>() {
+    }.getType();
+
     static {
         final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
@@ -56,8 +69,7 @@ public class BitforexRestApi {
                 params
         );
 
-        Type typeToken = new TypeToken<BalanceResponse>() {}.getType();
-        final BalanceResponse response = gson.fromJson(responseText, typeToken);
+        final BalanceResponse response = gson.fromJson(responseText, BALANCE_RESPONSE_TYPE);
         return response;
     }
 
@@ -74,17 +86,14 @@ public class BitforexRestApi {
                 params
         );
 
-        System.out.println(responseText);
-
-        Type typeToken = new TypeToken<TradeResponse>() {}.getType();
-        final TradeResponse response = gson.fromJson(responseText, typeToken);
+        final TradeResponse response = gson.fromJson(responseText, TRADE_RESPONSE_TYPE);
         return response;
     }
 
     public OpenOrdersResponse getOpenOrders(String base, String quote) throws IOException {
         final HashMap<String, String> params = new HashMap<>();
         params.put("symbol", baseQuoteToSymbol(base, quote));
-        params.put("state", "0");
+        params.put("state", STATE_OPEN_ORDERS);
 
         final String responseText = authorizedPost(
                 BASE_URL,
@@ -92,8 +101,22 @@ public class BitforexRestApi {
                 params
         );
 
-        Type typeToken = new TypeToken<OpenOrdersResponse>() {}.getType();
-        final OpenOrdersResponse response = gson.fromJson(responseText, typeToken);
+        final OpenOrdersResponse response = gson.fromJson(responseText, OPEN_ORDERS_RESPONSE_TYPE);
+        return response;
+    }
+
+    public CancelOrderResponse cancelOrder(CancelOrderRequest cancelOrderRequest) throws IOException {
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("orderId", ""+cancelOrderRequest.getOrderId());
+        params.put("symbol", baseQuoteToSymbol(cancelOrderRequest.getBase(), cancelOrderRequest.getQuote()));
+
+        final String responseText = authorizedPost(
+                BASE_URL,
+                "/api/v1/trade/cancelOrder",
+                params
+        );
+
+        final CancelOrderResponse response = gson.fromJson(responseText, CANCEL_ORDER_RESPONSE_TYPE);
         return response;
     }
 
