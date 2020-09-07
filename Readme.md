@@ -28,13 +28,13 @@ BitforexRestApi api = new BitforexRestApi(ApiKey.builder()
 .build());
 
 final BalanceResponse balance = api.getBalance();
-    if (balance.getSuccess()){
-        for (BalanceEntry balanceEntry : balance.getData()) {
-            if (balanceEntry.getTotal().compareTo(BigDecimal.ZERO) > 0){
-                System.out.println(balanceEntry.getCurrency() + ": " + balanceEntry.getTotal());
-            }
+if (balance.getSuccess()){
+    for (BalanceEntry balanceEntry : balance.getData()) {
+        if (balanceEntry.getTotal().compareTo(BigDecimal.ZERO) > 0){
+            System.out.println(balanceEntry.getCurrency() + ": " + balanceEntry.getTotal());
         }
-    } else {
+    }
+} else {
     System.out.println("error: " + balance.getMessage());
 }
 ```
