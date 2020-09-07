@@ -135,13 +135,8 @@ public class BitforexRestApi {
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.joining("&"));
 
-//        System.out.println("signString: " + signString);
-        final String sign;
         try {
-            sign = Hmac.calculateHMAC(signString, apiKey.getSecret());
-//            System.out.println("signData: " + sign);
-
-            params.put("signData", sign);
+            params.put("signData", Hmac.calculateHMAC(signString, apiKey.getSecret()));
 
             final List<NameValuePair> postParams = params.entrySet().stream()
                     .sorted(Comparator.comparing(Map.Entry::getKey))
